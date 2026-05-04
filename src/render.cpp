@@ -16,6 +16,18 @@ void Render::SetCamera(Vec3 c, float y, float p)
     pitch = p;
 }
 
+void Render::ZoomIn()
+{
+    m_fov = std::max(m_minfov, m_fov * 0.95f);
+    wxLogDebug("zoomin:%.3f\n", m_fov);
+}
+
+void Render::ZoomOut()
+{
+    m_fov = std::min(m_maxfov, m_fov * 1.05f);
+    wxLogDebug("zoomout:%.3f\n", m_fov);
+}
+
 wxPoint Render::WorldToScr(Vec3 worldPt)
 {
     // worldpt 是任意点,把绝对坐标变换为相对坐标,再实现2d投影

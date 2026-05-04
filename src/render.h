@@ -21,7 +21,12 @@ public:
     void DrawDoor(wxPaintDC &dc, bool isOpen);
     void Resize(int w, int h);
 
+    void ZoomIn();  // 放大
+    void ZoomOut(); // 缩小
+
 private:
+    const float m_minfov = 0.52f;
+    const float m_maxfov = 2.09f;
     float m_fov;
     float m_near;
     int m_winH, m_winW;

@@ -1,6 +1,7 @@
 #include "map3D.h"
 #include <wx/dcbuffer.h>
 #include <algorithm>
+#include "main.h"
 // 在.h 中定义过的class不需要再次写class name:baseclass{}
 // 直接写内部的函数实现
 // extern GameWorld world;

@@ -39,6 +39,7 @@ MainFrame::MainFrame() : wxFrame(nullptr, wxID_ANY, "monitor.game", wxDefaultPos
     mainSizer->Add(viceSizer, 1, wxEXPAND);
     mainSizer->Add(statusBar, 0, wxEXPAND);
     SetSizer(mainSizer);
+    SetToolBar(ToolBar);
     Centre();
 
     if (mp2d)
@@ -51,7 +52,22 @@ MainFrame::MainFrame() : wxFrame(nullptr, wxID_ANY, "monitor.game", wxDefaultPos
                {if(map) map->SetFocus(); });
     ToolBar->Bind(wxEVT_TOOL, [this](wxCommandEvent &e)
                   {
-        int id =e.GetId();
-        map->GetDrawmode(id);
-        map->Refresh(); });
+                   int id = e.GetId();
+               
+                   // 处理缩放按钮
+                   if(id == TOOL_ZOOMIN)
+                   {
+                       map->ZoomIn();
+                   }
+                   else if(id == TOOL_ZOOMOUT)
+                   {
+                       map->ZoomOut();
+                   }
+                   else
+                   {
+                       // 原来的绘图工具逻辑不变
+                       map->GetDrawmode(id);
+                   }
+               
+                   map->Refresh(); });
 }

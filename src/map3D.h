@@ -9,6 +9,7 @@
 #include <vector>
 #include <cmath>
 
+class MainFrame;
 // 实际是子窗口的交互接口
 struct DrawLine
 {
@@ -34,18 +35,29 @@ public:
     void GetDrawmode(int mode)
     {
         m_drawMode = mode;
-        if (mode == TOOL_NONE){
+        if (mode == TOOL_NONE)
+        {
             m_isDrawing = 0;
-        }     
+        }
     }
     void ClearCanvas();
+    void ZoomIn()
+    {
+        render->ZoomIn();
+        Refresh();
+    }
+    void ZoomOut()
+    {
+        render->ZoomOut();
+        Refresh();
+    }
 
 private:
     int m_drawMode = TOOL_NONE;
     bool m_isDrawing = false;
     wxPoint m_lastDrawPt;
     std::vector<DrawLine> m_drawLines;
-    wxWindow* m_parent;
+    wxWindow *m_parent;
 
     wxTimer timer; // 帧率刷新计时器
     Render *render = nullptr;
