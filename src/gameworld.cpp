@@ -33,7 +33,7 @@ void GameWorld::Update(float dt)
     }
 
     const float gravity = 9.8;
-    const float jumpPower = 4.5;
+    const float jumpPower = 5.0;
     if (input.space && player.z <= 0)
     {
         player.vz = jumpPower;
