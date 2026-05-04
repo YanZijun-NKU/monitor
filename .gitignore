@@ -1,4 +1,4 @@
-gi
+build/
 *.o
 *.obj
 *.d
