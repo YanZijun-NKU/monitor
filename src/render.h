@@ -15,10 +15,11 @@ public:
     void SetCamera(Vec3 c, float y, float p);
     wxPoint WorldToScr(Vec3 worldPt);
     void DrawQuad(wxPaintDC &dc, Vec3 p1, Vec3 p2, Vec3 p3, Vec3 p4);
+    void DrawTriangle(wxPaintDC &dc, Vec3 p1, Vec3 p2, Vec3 p3);
     void DrawHouse(wxPaintDC &dc);
     void DrawWindows(wxPaintDC &dc, bool isOpen);
     void DrawDoor(wxPaintDC &dc, bool isOpen);
-    void Resize(int w,int h);
+    void Resize(int w, int h);
 
 private:
     float m_fov;

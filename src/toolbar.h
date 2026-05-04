@@ -6,8 +6,8 @@
 enum GameToolID
 {
     TOOL_NONE = 0,
-    TOOL_1 = 2001,
-    TOOL_2,
+    TOOL_LINE = 2001,
+    TOOL_ERASER,
     TOOL_3,
     TOOL_4
 };
@@ -16,7 +16,7 @@ class Mytoolbar : public wxToolBar
 {
 public:
     Mytoolbar(wxWindow *parent, wxWindowID id = wxID_ANY);
-    int GetCurrentTool() const { return curtool; }
+    // int GetCurrentTool() const { return curtool; }
 
 private:
     int curtool;

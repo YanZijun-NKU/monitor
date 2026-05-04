@@ -63,20 +63,73 @@ void Render::DrawQuad(wxPaintDC &dc, Vec3 p1, Vec3 p2, Vec3 p3, Vec3 p4)
     dc.DrawLine(sp4, sp1);
 }
 
+void Render::DrawTriangle(wxPaintDC &dc, Vec3 p1, Vec3 p2, Vec3 p3)
+{
+    wxPoint sp1 = WorldToScr(p1);
+    wxPoint sp2 = WorldToScr(p2);
+    wxPoint sp3 = WorldToScr(p3);
+
+    if (sp1.x < 0 && sp2.x < 0 && sp3.x < 0)
+        return;
+    if (sp1.y < 0 && sp2.y < 0 && sp3.y < 0)
+        return;
+    if (sp1.x > m_winW && sp2.x > m_winW && sp3.x > m_winW)
+        return;
+    if (sp1.y > m_winH && sp2.y > m_winH && sp3.y > m_winH)
+        return;
+
+    dc.DrawLine(sp1, sp2);
+    dc.DrawLine(sp2, sp3);
+    dc.DrawLine(sp3, sp1);
+}
+
 static const float HOUSE_X = 320.0;
 static const float HOUSE_Y = 320.0;
 static const float HOUSE_BASE_Z = 0.0;
 
 void Render::DrawHouse(wxPaintDC &dc)
 {
-    // dc.SetPen(wxPen(*wxWHITE,2));
-    // dc.DrawLine(10,10,200,200);
-    //  地面墙体示例（X-Y地面，Z高度）
-    Vec3 v1(HOUSE_X - 8, HOUSE_Y - 8, HOUSE_BASE_Z);
-    Vec3 v2(HOUSE_X + 8, HOUSE_Y - 8, HOUSE_BASE_Z);
-    Vec3 v3(HOUSE_X + 8, HOUSE_Y - 8, HOUSE_BASE_Z + 6);
-    Vec3 v4(HOUSE_X - 8, HOUSE_Y - 8, HOUSE_BASE_Z + 6);
-    DrawQuad(dc, v1, v2, v3, v4);
+    const float halfS = 8.0f;
+    const float h = 6.0f;
+    const float roofH = 6.0f;
+
+    // 底面 4点
+    Vec3 bbl(HOUSE_X - halfS, HOUSE_Y - halfS, HOUSE_BASE_Z);
+    Vec3 bbr(HOUSE_X + halfS, HOUSE_Y - halfS, HOUSE_BASE_Z);
+    Vec3 fbr(HOUSE_X + halfS, HOUSE_Y + halfS, HOUSE_BASE_Z);
+    Vec3 fbl(HOUSE_X - halfS, HOUSE_Y + halfS, HOUSE_BASE_Z);
+
+    // 顶面 4点
+    Vec3 tpl(HOUSE_X - halfS, HOUSE_Y - halfS, HOUSE_BASE_Z + h);
+    Vec3 tpr(HOUSE_X + halfS, HOUSE_Y - halfS, HOUSE_BASE_Z + h);
+    Vec3 tfr(HOUSE_X + halfS, HOUSE_Y + halfS, HOUSE_BASE_Z + h);
+    Vec3 tfl(HOUSE_X - halfS, HOUSE_Y + halfS, HOUSE_BASE_Z + h);
+
+    // 尖顶中心点
+    Vec3 roofTop(HOUSE_X, HOUSE_Y, HOUSE_BASE_Z + h + roofH);
+
+    // -------- 完整立方体6个面 --------
+    // 前墙
+    DrawQuad(dc, fbl, fbr, tfr, tfl);
+    // 后墙
+    DrawQuad(dc, bbl, bbr, tpr, tpl);
+    // 左墙
+    DrawQuad(dc, bbl, fbl, tfl, tpl);
+    // 右墙
+    DrawQuad(dc, bbr, fbr, tfr, tpr);
+    // 底面
+    DrawQuad(dc, bbl, bbr, fbr, fbl);
+    // 顶面
+    DrawQuad(dc, tpl, tpr, tfr, tfl);
+
+    // -------- 完整四棱锥尖顶（4个三角屋顶） --------
+    DrawTriangle(dc, roofTop, tpl, tpr);
+    DrawTriangle(dc, roofTop, tpr, tfr);
+    DrawTriangle(dc, roofTop, tfr, tfl);
+    DrawTriangle(dc, roofTop, tfl, tpl);
+
+    // DrawDoor(dc, false);
+    // DrawWindows(dc, false);
 }
 
 // 门绘制：开关状态区分

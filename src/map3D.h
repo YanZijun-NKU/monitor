@@ -5,8 +5,17 @@
 #include "render.h"
 #include "map2D.h"
 #include "statuebar.h"
+#include "toolbar.h"
+#include <vector>
+#include <cmath>
 
 // 实际是子窗口的交互接口
+struct DrawLine
+{
+    wxPoint s;
+    wxPoint e;
+    DrawLine(wxPoint s_, wxPoint e_) : s(s_), e(e_) {}
+};
 
 class Map3D : public wxPanel
 {
@@ -22,11 +31,22 @@ public:
     {
         m_map2d = p2d;
     }
+    void GetDrawmode(int mode)
+    {
+        m_drawMode = mode;
+        if (mode == TOOL_NONE)
+            m_isDrawing = 0;
+    }
+    void ClearCanvas();
 
 private:
+    int m_drawMode = TOOL_NONE;
+    bool m_isDrawing = false;
+    wxPoint m_lastDrawPt;
+    std::vector<DrawLine> m_drawLines;
+
     wxTimer timer; // 帧率刷新计时器
     Render *render = nullptr;
-
     Map2D *m_map2d = nullptr;
     Mystatusbar *m_statusbar = nullptr;
 
@@ -36,6 +56,8 @@ private:
     void OnKeyDown(wxKeyEvent &event);
     void OnKeyUp(wxKeyEvent &event);
     void OnMouseMove(wxMouseEvent &event);
+    void OnMouseUp(wxMouseEvent &event);
+    void OnMouseDown(wxMouseEvent &event);
 
     wxDECLARE_EVENT_TABLE();
 };

@@ -1,0 +1,5 @@
+gi
+*.o
+*.obj
+*.d
+CMakeFiles/
