@@ -7,7 +7,7 @@ void OnExit(wxCommandEvent &e)
 
 void OnAbout(wxCommandEvent &e)
 {
-    wxMessageBox("Author:NKU_Yzj\nStudentID:2514108\nVersion:1.0.test\nContactMe:1181889301@qq.com", "monitor.game.testEDITION");
+    wxMessageBox("Author:NKU_Yzj\nStudentID:2514108\nVersion:1.1.test\nContactMe:1181889301@qq.com", "monitor.game.testEDITION");
 }
 
 void OnFullSCN(wxCommandEvent &e)

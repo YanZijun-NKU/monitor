@@ -45,7 +45,8 @@ wxBEGIN_EVENT_TABLE(Map3D, wxPanel) // 前面写当前类，后面写父类
             wxEND_EVENT_TABLE();
 
 Map3D::Map3D(wxWindow *parent, wxWindowID id)
-    : wxPanel(parent, id, wxDefaultPosition, wxDefaultSize, wxFULL_REPAINT_ON_RESIZE | wxWANTS_CHARS)
+    : wxPanel(parent, id, wxDefaultPosition, wxDefaultSize, wxFULL_REPAINT_ON_RESIZE | wxWANTS_CHARS),
+      m_parent(parent)
 {
     SetBackgroundStyle(wxBG_STYLE_PAINT);
     SetBackgroundColour(*wxBLACK);
@@ -133,6 +134,17 @@ void Map3D::OnPaint(wxPaintEvent &event)
 
 void Map3D::OnKeyDown(wxKeyEvent &evt)
 {
+    // 新增：ESC 键退出全屏（macOS 下画布里直接捕获）
+    if (evt.GetKeyCode() == WXK_ESCAPE)
+    {
+        // 把 m_parent 强制转换为顶层窗口类型
+        wxTopLevelWindow *topWin = dynamic_cast<wxTopLevelWindow *>(m_parent);
+        if (topWin && topWin->IsFullScreen())
+        {
+            topWin->ShowFullScreen(false);
+            return;
+        }
+    }
     world.input.SetKeyDown(evt.GetKeyCode());
     evt.Skip();
 }
@@ -156,6 +168,7 @@ void Map3D::OnMouseDown(wxMouseEvent &evt)
 void Map3D::OnMouseUp(wxMouseEvent &evt)
 {
     m_isDrawing = false;
+    // this->SetFocus();
     evt.Skip();
 }
 
@@ -163,8 +176,8 @@ void Map3D::OnMouseMove(wxMouseEvent &evt)
 {
     int x = evt.GetX();
     int y = evt.GetY();
-
-    // 普通模式：相机视角控制
+    // wxLogDebug("map3dcurtool = %d\n",m_drawMode);
+    //  普通模式：相机视角控制
     if (m_drawMode == TOOL_NONE)
     {
         static int LastX = -1;

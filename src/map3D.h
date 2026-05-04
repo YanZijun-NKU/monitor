@@ -34,8 +34,9 @@ public:
     void GetDrawmode(int mode)
     {
         m_drawMode = mode;
-        if (mode == TOOL_NONE)
+        if (mode == TOOL_NONE){
             m_isDrawing = 0;
+        }     
     }
     void ClearCanvas();
 
@@ -44,6 +45,7 @@ private:
     bool m_isDrawing = false;
     wxPoint m_lastDrawPt;
     std::vector<DrawLine> m_drawLines;
+    wxWindow* m_parent;
 
     wxTimer timer; // 帧率刷新计时器
     Render *render = nullptr;
