@@ -4,6 +4,8 @@
 #include "menu.h"
 #include "statuebar.h"
 #include "toolbar.h"
+#include <wx/filename.h>
+#include <wx/stdpaths.h>
 // 实质上是wximplement->myapp->oninit->mainframe->content
 
 class MyApp : public wxApp
@@ -16,6 +18,13 @@ wxIMPLEMENT_APP(MyApp);
 
 bool MyApp::OnInit()
 {
+    wxString exePath = wxStandardPaths::Get().GetExecutablePath();
+    wxFileName exe(exePath);
+    if (exe.IsOk())
+    {
+        wxSetWorkingDirectory(exe.GetPath());
+    }
+
     wxInitAllImageHandlers();
     MainFrame *frame = new MainFrame();
     frame->Show(true); // show是使窗口显示
