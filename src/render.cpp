@@ -1,8 +1,8 @@
 #include "render.h"
+#include "gameworld.h"
 
 Render::Render(int w, int h)
 {
-    // initialization
     m_fov = 1.05f;
     m_near = 0.1f;
     m_winW = w;
@@ -30,28 +30,26 @@ void Render::ZoomOut()
 
 wxPoint Render::WorldToScr(Vec3 worldPt)
 {
-    // worldpt 是任意点,把绝对坐标变换为相对坐标,再实现2d投影
     float dx1 = worldPt.x - Campos.x;
     float dy1 = worldPt.y - Campos.y;
     float dz1 = worldPt.z - Campos.z;
-    // xuanzhuan-1
+
     float dx2 = dx1 * cosf(-yaw) - dy1 * sinf(-yaw);
     float dy2 = dy1 * cosf(-yaw) + dx1 * sinf(-yaw);
     float dz2 = dz1;
-    // xuanzhuan-2,y axis is forward
+
     float dx = dx2;
     float dy = dy2 * cosf(-pitch) - dz2 * sinf(-pitch);
     float dz = dy2 * sinf(-pitch) + dz2 * cosf(-pitch);
-    // project to scr(2d)
+
     if (dy < m_near)
         dy = m_near;
     float scale = 1.0f / tanf(m_fov * 0.5f);
     float px = scale * dx / dy;
     float py = scale * dz / dy;
-    // make center
-    int sx, sy;
-    sx = (int)(m_winW * 0.5f + px * m_winW * 0.5f);
-    sy = (int)(m_winH * 0.5f - py * m_winH * 0.5f);
+
+    int sx = (int)(m_winW * 0.5f + px * m_winW * 0.5f);
+    int sy = (int)(m_winH * 0.5f - py * m_winH * 0.5f);
     return wxPoint(sx, sy);
 }
 
@@ -61,6 +59,7 @@ void Render::DrawQuad(wxPaintDC &dc, Vec3 p1, Vec3 p2, Vec3 p3, Vec3 p4)
     wxPoint sp2 = WorldToScr(p2);
     wxPoint sp3 = WorldToScr(p3);
     wxPoint sp4 = WorldToScr(p4);
+
     if (sp1.x < 0 && sp2.x < 0 && sp3.x < 0 && sp4.x < 0)
         return;
     if (sp1.y < 0 && sp2.y < 0 && sp3.y < 0 && sp4.y < 0)
@@ -69,6 +68,7 @@ void Render::DrawQuad(wxPaintDC &dc, Vec3 p1, Vec3 p2, Vec3 p3, Vec3 p4)
         return;
     if (sp1.y > m_winH && sp2.y > m_winH && sp3.y > m_winH && sp4.y > m_winH)
         return;
+
     dc.DrawLine(sp1, sp2);
     dc.DrawLine(sp2, sp3);
     dc.DrawLine(sp3, sp4);
@@ -101,64 +101,189 @@ static const float HOUSE_BASE_Z = 0.0;
 
 void Render::DrawHouse(wxPaintDC &dc)
 {
+    world.m_collisions.clear();
     const float halfS = 8.0f;
     const float h = 6.0f;
     const float roofH = 6.0f;
 
-    // 底面 4点
     Vec3 bbl(HOUSE_X - halfS, HOUSE_Y - halfS, HOUSE_BASE_Z);
     Vec3 bbr(HOUSE_X + halfS, HOUSE_Y - halfS, HOUSE_BASE_Z);
     Vec3 fbr(HOUSE_X + halfS, HOUSE_Y + halfS, HOUSE_BASE_Z);
     Vec3 fbl(HOUSE_X - halfS, HOUSE_Y + halfS, HOUSE_BASE_Z);
 
-    // 顶面 4点
     Vec3 tpl(HOUSE_X - halfS, HOUSE_Y - halfS, HOUSE_BASE_Z + h);
     Vec3 tpr(HOUSE_X + halfS, HOUSE_Y - halfS, HOUSE_BASE_Z + h);
     Vec3 tfr(HOUSE_X + halfS, HOUSE_Y + halfS, HOUSE_BASE_Z + h);
     Vec3 tfl(HOUSE_X - halfS, HOUSE_Y + halfS, HOUSE_BASE_Z + h);
 
-    // 尖顶中心点
     Vec3 roofTop(HOUSE_X, HOUSE_Y, HOUSE_BASE_Z + h + roofH);
 
-    // -------- 完整立方体6个面 --------
-    // 前墙
     DrawQuad(dc, fbl, fbr, tfr, tfl);
-    // 后墙
+    Collision cw1;
+    cw1.sp1 = fbl;
+    cw1.sp2 = fbr;
+    cw1.sp3 = tfr;
+    cw1.sp4 = tfl;
+    cw1.type = RECT;
+    world.m_collisions.push_back(cw1);
+
+    // 前墙：只保留原有绘制，不整体加碰撞
     DrawQuad(dc, bbl, bbr, tpr, tpl);
-    // 左墙
+
+    float frontY = HOUSE_Y - halfS;
+
+    {
+        Collision col;
+        col.sp1 = Vec3(HOUSE_X - 8, frontY, 0.0f);
+        col.sp2 = Vec3(HOUSE_X - 2, frontY, 0.0f);
+        col.sp3 = Vec3(HOUSE_X - 8, frontY, 6);
+        col.sp4 = Vec3(HOUSE_X - 2, frontY, 6);
+        col.type = RECT;
+        world.m_collisions.push_back(col);
+    }
+
+    // 门左上侧碰撞
+    {
+        Collision col;
+        col.sp1 = Vec3(HOUSE_X - 2, frontY, 3.2f);
+        col.sp2 = Vec3(HOUSE_X + 2, frontY, 3.2f);
+        col.sp3 = Vec3(HOUSE_X - 2, frontY, 6.0f);
+        col.sp4 = Vec3(HOUSE_X + 2, frontY, 6.0f);
+        col.type = RECT;
+        world.m_collisions.push_back(col);
+    }
+
+    // // 门与窗户中间墙体碰撞
+    {
+        Collision col;
+        col.sp1 = Vec3(HOUSE_X + 2, frontY, 0);
+        col.sp2 = Vec3(HOUSE_X + 4, frontY, 0);
+        col.sp3 = Vec3(HOUSE_X + 4, frontY, 6.0f);
+        col.sp4 = Vec3(HOUSE_X + 2, frontY, 6.0f);
+        col.type = RECT;
+        world.m_collisions.push_back(col);
+    }
+
+    // // 窗户上方碰撞
+    {
+        Collision col;
+        col.sp1 = Vec3(HOUSE_X + 4, frontY, 3.5f);
+        col.sp2 = Vec3(HOUSE_X + 7, frontY, 3.5f);
+        col.sp3 = Vec3(HOUSE_X + 7, frontY, 6.0f);
+        col.sp4 = Vec3(HOUSE_X + 4, frontY, 6.0f);
+        col.type = RECT;
+        world.m_collisions.push_back(col);
+    }
+
+    // // 窗户右侧碰撞
+    {
+        Collision col;
+        col.sp1 = Vec3(HOUSE_X + 7, frontY, 0);
+        col.sp2 = Vec3(HOUSE_X + 8, frontY, 0);
+        col.sp3 = Vec3(HOUSE_X + 8, frontY, 6.0f);
+        col.sp4 = Vec3(HOUSE_X + 7, frontY, 6.0f);
+        col.type = RECT;
+        world.m_collisions.push_back(col);
+    }
+
+    {
+        Collision col;
+        col.sp1 = Vec3(HOUSE_X + 4, frontY, 0);
+        col.sp2 = Vec3(HOUSE_X + 7, frontY, 0);
+        col.sp3 = Vec3(HOUSE_X + 4, frontY, 2.0f);
+        col.sp4 = Vec3(HOUSE_X + 7, frontY, 2.0f);
+        col.type = RECT;
+        world.m_collisions.push_back(col);
+    }
+
     DrawQuad(dc, bbl, fbl, tfl, tpl);
-    // 右墙
+    Collision cw3;
+    cw3.sp1 = bbl;
+    cw3.sp2 = fbl;
+    cw3.sp3 = tfl;
+    cw3.sp4 = tpl;
+    cw3.type = RECT;
+    world.m_collisions.push_back(cw3);
+
     DrawQuad(dc, bbr, fbr, tfr, tpr);
-    // 底面
+    Collision cw4;
+    cw4.sp1 = bbr;
+    cw4.sp2 = fbr;
+    cw4.sp3 = tfr;
+    cw4.sp4 = tpr;
+    cw4.type = RECT;
+    world.m_collisions.push_back(cw4);
+
     DrawQuad(dc, bbl, bbr, fbr, fbl);
-    // 顶面
+    // Collision cw5;
+    // cw5.sp1 = bbl;
+    // cw5.sp2 = bbr;
+    // cw5.sp3 = fbr;
+    // cw5.sp4 = fbl;
+    // cw5.type = RECT;
+    // world.m_collisions.push_back(cw5);
+
     DrawQuad(dc, tpl, tpr, tfr, tfl);
+    // Collision cw6;
+    // cw6.sp1 = tpl;
+    // cw6.sp2 = tpr;
+    // cw6.sp3 = tfr;
+    // cw6.sp4 = tfl;
+    // cw6.type = RECT;
+    // world.m_collisions.push_back(cw6);
 
-    // -------- 完整四棱锥尖顶（4个三角屋顶） --------
     DrawTriangle(dc, roofTop, tpl, tpr);
-    DrawTriangle(dc, roofTop, tpr, tfr);
-    DrawTriangle(dc, roofTop, tfr, tfl);
-    DrawTriangle(dc, roofTop, tfl, tpl);
+    Collision cw7;
+    cw7.sp1 = roofTop;
+    cw7.sp2 = tpl;
+    cw7.sp3 = tpr;
+    cw7.type = TRI;
+    world.m_collisions.push_back(cw7);
 
-    // DrawDoor(dc, false);
-    // DrawWindows(dc, false);
+    DrawTriangle(dc, roofTop, tpr, tfr);
+    Collision cw8;
+    cw8.sp1 = roofTop;
+    cw8.sp2 = tpr;
+    cw8.sp3 = tfr;
+    cw8.type = TRI;
+    world.m_collisions.push_back(cw8);
+
+    DrawTriangle(dc, roofTop, tfr, tfl);
+    Collision cw9;
+    cw9.sp1 = roofTop;
+    cw9.sp2 = tfr;
+    cw9.sp3 = tfl;
+    cw9.type = TRI;
+    world.m_collisions.push_back(cw9);
+
+    DrawTriangle(dc, roofTop, tfl, tpl);
+    Collision cw10;
+    cw10.sp1 = roofTop;
+    cw10.sp2 = tfl;
+    cw10.sp3 = tpl;
+    cw10.type = TRI;
+    world.m_collisions.push_back(cw10);
 }
 
-// 门绘制：开关状态区分
 void Render::DrawDoor(wxPaintDC &dc, bool isOpen)
 {
     if (!isOpen)
     {
-        // 关门：垂直墙面
         Vec3 d1(HOUSE_X - 2, HOUSE_Y - 8, HOUSE_BASE_Z);
         Vec3 d2(HOUSE_X + 2, HOUSE_Y - 8, HOUSE_BASE_Z);
         Vec3 d3(HOUSE_X + 2, HOUSE_Y - 8, HOUSE_BASE_Z + 3.2f);
         Vec3 d4(HOUSE_X - 2, HOUSE_Y - 8, HOUSE_BASE_Z + 3.2f);
+        Collision doorCol;
+        doorCol.sp1 = d1;
+        doorCol.sp2 = d2;
+        doorCol.sp3 = d3;
+        doorCol.sp4 = d4;
+        doorCol.type = RECT;
+        world.m_collisions.push_back(doorCol);
         DrawQuad(dc, d1, d2, d3, d4);
     }
     else
     {
-        // 开门：沿X轴向侧翻开
         Vec3 d1(HOUSE_X - 2, HOUSE_Y - 8, HOUSE_BASE_Z);
         Vec3 d2(HOUSE_X - 2, HOUSE_Y - 4, HOUSE_BASE_Z);
         Vec3 d3(HOUSE_X - 2, HOUSE_Y - 4, HOUSE_BASE_Z + 3.2f);
@@ -167,7 +292,6 @@ void Render::DrawDoor(wxPaintDC &dc, bool isOpen)
     }
 }
 
-// 窗户绘制
 void Render::DrawWindows(wxPaintDC &dc, bool isOpen)
 {
     if (!isOpen)
@@ -177,6 +301,13 @@ void Render::DrawWindows(wxPaintDC &dc, bool isOpen)
         Vec3 w3(HOUSE_X + 7, HOUSE_Y - 8, HOUSE_BASE_Z + 3.5f);
         Vec3 w4(HOUSE_X + 4, HOUSE_Y - 8, HOUSE_BASE_Z + 3.5f);
         DrawQuad(dc, w1, w2, w3, w4);
+        Collision winCol;
+        winCol.sp1 = w1;
+        winCol.sp2 = w2;
+        winCol.sp3 = w3;
+        winCol.sp4 = w4;
+        winCol.type = RECT;
+        world.m_collisions.push_back(winCol);
     }
     else
     {

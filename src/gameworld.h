@@ -3,11 +3,24 @@
 #include <vector>
 #include <cstring>
 #include <wx/wx.h>
+#include "render.h"
 // 这部分用于存储状态设置，类似于.ini文件，是纯文本，不负责图形化
 // c++特性：struct和public class没有区别，因此struct 内部也可以写函数。c不支持
+enum CollisionTYPE
+{
+    RECT,
+    TRI
+};
+
+struct Collision
+{
+    Vec3 sp1, sp2, sp3, sp4;
+    CollisionTYPE type;
+};
+
 struct Player
 {
-    float x = 300.0, y = 300.0, z = 300.0;
+    float x = 300.0, y = 300.0, z = 1.0;
     float yaw = 0;
     float pitch = 0;
     float movespeed = 15.0;
@@ -109,6 +122,8 @@ public:
     House house;
     GameInput input;
     void Update(float dt);
+    // const std::vector<Collision>& GetCollisions() const {return m_collisions;}
+    std::vector<Collision> m_collisions;
 
 private:
     bool m_ePressed = false;
