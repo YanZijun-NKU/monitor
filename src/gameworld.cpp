@@ -39,7 +39,7 @@ void GameWorld::Update(float dt)
     }
 
     bool blockMove = false;
-    const float faceThick = 0.2f; // 只往墙面正反加厚，侧面不加
+    const float faceThick = 0.25f; // 只往墙面正反加厚，侧面不加
 
     for (const auto &col : m_collisions)
     {
